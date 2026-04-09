@@ -29,5 +29,5 @@ frontend/dist/
 data/
 output/
 
-# Logs
-*.log
+# Vercel
+.vercelignore

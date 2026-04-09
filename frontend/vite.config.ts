@@ -12,4 +12,11 @@ export default defineConfig({
       },
     },
   },
+  // 构建配置
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+  },
+  // 基础路径设置为空，Vercel 会自动处理路由
+  base: '',
 })

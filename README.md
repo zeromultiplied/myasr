@@ -145,6 +145,23 @@ myasr/
 
 任务状态流转：`uploading → transcribing → llm_processing → done / failed`
 
-## License
+## Vercel 部署
 
-[Apache License 2.0](LICENSE)
+项目已配置支持 Vercel 部署，包含：
+- `vercel.json` - Vercel 配置文件
+- `api/` - Serverless Functions 入口
+- 数据库适配 Postgres
+- 前端构建配置
+
+### 部署步骤
+1. 安装 Vercel CLI: `npm i -g vercel`
+2. 登录: `vercel login`
+3. 部署: `vercel --prod`
+
+### 环境变量配置
+在 Vercel 控制台中配置所有必需的 API 密钥:
+- 讯飞 ASR: `XFYUN_APP_ID`, `XFYUN_SECRET_KEY`
+- LLM 提供商: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` 等
+- Vercel 会自动提供 `POSTGRES_URL`
+
+详细说明参见 [DEPLOYMENT.md](DEPLOYMENT.md)
