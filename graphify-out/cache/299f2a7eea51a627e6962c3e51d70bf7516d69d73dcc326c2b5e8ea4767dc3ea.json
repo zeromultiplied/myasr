@@ -1,0 +1,1 @@
+{"nodes": [{"id": "main_vue_app", "label": "Vue Application Entry", "file_type": "code", "source_file": "frontend/src/main.ts", "source_location": null}], "edges": [{"source": "main_vue_app", "target": "app_vue", "relation": "mounts", "confidence": "EXTRACTED", "confidence_score": 1.0, "source_file": "frontend/src/main.ts"}], "hyperedges": []}

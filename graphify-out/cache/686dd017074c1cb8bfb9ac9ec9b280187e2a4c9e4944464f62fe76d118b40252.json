@@ -1,0 +1,1 @@
+{"nodes": [{"id": "api_main_handler", "label": "Mangum Handler", "file_type": "code", "source_file": "api/main.py", "source_location": "7"}], "edges": [{"source": "api_main_handler", "target": "main_app", "relation": "wraps", "confidence": "EXTRACTED", "confidence_score": 1.0, "source_file": "api/main.py"}], "hyperedges": []}

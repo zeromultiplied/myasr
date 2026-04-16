@@ -1,0 +1,1 @@
+{"nodes": [{"id": "viteconfig_vite", "label": "Vite Configuration", "file_type": "code", "source_file": "frontend/vite.config.ts", "source_location": null}], "edges": [{"source": "viteconfig_vite", "target": "backend_api", "relation": "configures_proxy_to", "confidence": "EXTRACTED", "confidence_score": 1.0, "source_file": "frontend/vite.config.ts"}], "hyperedges": []}
