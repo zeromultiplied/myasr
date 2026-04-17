@@ -1,13 +1,157 @@
+/* ============================================
+   MyASR Design System - Inspired by Lovable
+   ============================================ */
+
+/* --- Color Palette (Opacity-Driven) --- */
+:root {
+  /* Primary */
+  --cream: #f7f4ed;
+  --charcoal: #1c1c1c;
+  --off-white: #fcfbf8;
+
+  /* Neutral Scale (all derived from #1c1c1c) */
+  --charcoal-100: #1c1c1c;
+  --charcoal-83: rgba(28, 28, 28, 0.83);
+  --charcoal-82: rgba(28, 28, 28, 0.82);
+  --charcoal-40: rgba(28, 28, 28, 0.4);
+  --charcoal-4: rgba(28, 28, 28, 0.04);
+  --charcoal-3: rgba(28, 28, 28, 0.03);
+
+  /* Surface & Border */
+  --border-light: #eceae4;
+  --muted: #5f5f5d;
+
+  /* Interactive */
+  --focus-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;
+  --ring-blue: rgba(59, 130, 246, 0.5);
+
+  /* Button Inset Shadow */
+  --btn-inset: rgba(255, 255, 255, 0.2) 0px 0.5px 0px 0px inset,
+               rgba(0, 0, 0, 0.2) 0px 0px 0px 0.5px inset,
+               rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+
+  /* Radius Scale */
+  --radius-micro: 4px;
+  --radius-std: 6px;
+  --radius-compact: 8px;
+  --radius-card: 12px;
+  --radius-container: 16px;
+  --radius-pill: 9999px;
+
+  /* Spacing */
+  --space-1: 8px;
+  --space-2: 12px;
+  --space-3: 16px;
+  --space-4: 20px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-8: 40px;
+  --space-10: 56px;
+}
+
+/* --- Reset & Base --- */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+html, body {
+  height: 100%;
+}
+
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background: #f5f5f9;
-  color: #344054;
+  font-family: 'Camera Plain Variable', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 400;
+  background: var(--cream);
+  color: var(--charcoal);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* --- Typography --- */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--charcoal);
+}
+
+h1 { font-size: 3.75rem; letter-spacing: -1.5px; line-height: 1.0; }
+h2 { font-size: 3rem; letter-spacing: -1.2px; line-height: 1.0; }
+h3 { font-size: 2.25rem; letter-spacing: -0.9px; line-height: 1.1; }
+h4 { font-size: 1.25rem; letter-spacing: normal; line-height: 1.25; }
+
+p {
+  font-size: 1rem;
+  color: var(--charcoal-82);
+  line-height: 1.5;
+}
+
+/* --- Links --- */
+a {
+  color: var(--charcoal);
+  text-decoration: underline;
+  font-size: 1rem;
+}
+
+a:hover {
+  opacity: 0.7;
+}
+
+/* --- Scrollbar --- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--cream);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--charcoal-40);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* --- Focus States --- */
+:focus-visible {
+  outline: 2px solid var(--ring-blue);
+  outline-offset: 2px;
+  box-shadow: var(--focus-shadow);
+}
+
+/* --- Button Base --- */
+button {
+  font-family: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+/* --- Input Base --- */
+input, select, textarea {
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--charcoal);
+  background: var(--cream);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-std);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--muted);
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--charcoal-40);
+  box-shadow: 0 0 0 3px var(--ring-blue);
 }

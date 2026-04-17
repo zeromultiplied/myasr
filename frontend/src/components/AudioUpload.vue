@@ -140,81 +140,108 @@ function submit() {
 
 <style scoped>
 .upload-card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  background: var(--cream);
+  border-radius: var(--radius-card);
+  padding: var(--space-5);
+  border: 1px solid var(--border-light);
 }
 
 .drop-zone {
-  border: 2px dashed #d0d5dd;
-  border-radius: 8px;
+  border: 2px dashed var(--charcoal-40);
+  border-radius: var(--radius-std);
   padding: 32px 20px;
   text-align: center;
   cursor: pointer;
   transition: all 0.2s;
+  background: var(--cream);
 }
 
 .drop-zone:hover,
 .drop-zone.drag-over {
-  border-color: #4f46e5;
-  background: #f0f0ff;
+  border-color: var(--charcoal-40);
+  background: var(--charcoal-3);
 }
 
 .drop-zone.has-file {
   border-style: solid;
-  border-color: #4f46e5;
+  border-color: var(--charcoal-40);
   padding: 16px 20px;
 }
 
-.drop-icon { font-size: 32px; margin-bottom: 6px; }
-.drop-hint p { margin: 4px 0; color: #667085; font-size: 14px; }
-.drop-sub { font-size: 12px !important; color: #98a2b3 !important; }
+.drop-icon { font-size: 2rem; margin-bottom: 6px; }
+.drop-hint p { margin: 4px 0; color: var(--muted); font-size: 0.875rem; }
+.drop-sub { font-size: 0.75rem !important; color: var(--charcoal-40) !important; }
 
 .file-info { display: flex; align-items: center; gap: 12px; }
-.file-name { font-weight: 600; color: #1d2939; font-size: 14px; }
-.file-size { color: #98a2b3; font-size: 13px; }
+.file-name { font-weight: 600; color: var(--charcoal); font-size: 0.875rem; }
+.file-size { color: var(--muted); font-size: 0.813rem; }
 
 .btn-clear {
-  margin-left: auto; background: none; border: none;
-  cursor: pointer; font-size: 16px; color: #98a2b3;
-  padding: 4px 8px; border-radius: 4px;
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--muted);
+  padding: 4px 8px;
+  border-radius: var(--radius-micro);
 }
-.btn-clear:hover { background: #f2f4f7; color: #667085; }
+.btn-clear:hover { background: var(--charcoal-4); color: var(--charcoal); }
 
-.options { margin-top: 16px; }
+.options { margin-top: var(--space-3); }
 .option-group { margin-bottom: 10px; }
 
 .group-label {
-  display: block; font-size: 13px; font-weight: 600;
-  color: #344054; margin-bottom: 6px;
+  display: block;
+  font-size: 0.813rem;
+  font-weight: 600;
+  color: var(--charcoal);
+  margin-bottom: 6px;
 }
 
 .checkbox-row { display: flex; flex-wrap: wrap; gap: 12px; }
 
 .checkbox-item {
-  display: flex; align-items: center; gap: 5px;
-  font-size: 13px; color: #475467; cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.813rem;
+  color: var(--charcoal-82);
+  cursor: pointer;
 }
 
 .option-row { display: flex; gap: 12px; align-items: end; }
 
 .option-row select, .option-row input[type="text"] {
-  padding: 5px 8px; border: 1px solid #d0d5dd;
-  border-radius: 6px; font-size: 13px; outline: none;
+  padding: 6px 10px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-std);
+  font-size: 0.875rem;
+  outline: none;
+  background: var(--cream);
+  color: var(--charcoal);
 }
 
 .option-row select:focus, .option-row input[type="text"]:focus {
-  border-color: #4f46e5;
+  border-color: var(--charcoal-40);
+  box-shadow: 0 0 0 3px var(--ring-blue);
 }
 
 .btn-submit {
-  margin-top: 16px; width: 100%; padding: 10px;
-  background: #4f46e5; color: #fff; border: none;
-  border-radius: 8px; font-size: 14px; font-weight: 600;
-  cursor: pointer; transition: background 0.2s;
+  margin-top: var(--space-3);
+  width: 100%;
+  padding: 10px;
+  background: var(--charcoal);
+  color: var(--off-white);
+  border: none;
+  border-radius: var(--radius-std);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  box-shadow: var(--btn-inset);
 }
 
-.btn-submit:hover:not(:disabled) { background: #4338ca; }
-.btn-submit:disabled { background: #c7d2fe; cursor: not-allowed; }
+.btn-submit:hover:not(:disabled) { opacity: 0.85; }
+.btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
 </style>

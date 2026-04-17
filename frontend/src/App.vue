@@ -61,35 +61,36 @@ function navigate(page: string) {
 .sidebar {
   width: 220px;
   min-width: 220px;
-  background: #fff;
-  border-right: 1px solid #eaecf0;
+  background: var(--cream);
+  border-right: 1px solid var(--border-light);
   display: flex;
   flex-direction: column;
 }
 
 .sidebar-top {
   padding: 20px 16px 16px;
-  border-bottom: 1px solid #eaecf0;
+  border-bottom: 1px solid var(--border-light);
 }
 
 .sidebar-top h2 {
   margin: 0;
-  font-size: 20px;
-  font-weight: 700;
-  color: #4f46e5;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--charcoal);
+  letter-spacing: -0.02em;
 }
 
 .sidebar-sub {
   margin: 4px 0 0 0;
-  font-size: 12px;
-  color: #98a2b3;
+  font-size: 0.875rem;
+  color: var(--muted);
 }
 
 .nav {
   display: flex;
   flex-direction: column;
   padding: 8px;
-  gap: 2px;
+  gap: 4px;
 }
 
 .nav-item {
@@ -99,36 +100,34 @@ function navigate(page: string) {
   padding: 10px 12px;
   border: none;
   background: none;
-  border-radius: 8px;
+  border-radius: var(--radius-std);
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  color: #344054;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--charcoal);
   text-align: left;
-  transition: all 0.15s;
+  transition: background 0.15s;
 }
 
 .nav-item:hover {
-  background: #f9fafb;
-  color: #4f46e5;
+  background: var(--charcoal-4);
 }
 
 .nav-item.active {
-  background: #f0f0ff;
-  color: #4f46e5;
+  background: var(--charcoal-3);
   font-weight: 600;
 }
 
 .nav-icon {
-  font-size: 16px;
+  font-size: 1rem;
   width: 20px;
   text-align: center;
 }
 
 .content {
   flex: 1;
-  padding: 24px;
+  padding: 0;
   overflow-y: auto;
-  background: #f9fafb;
+  background: var(--cream);
 }
 </style>

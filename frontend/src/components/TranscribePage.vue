@@ -178,13 +178,14 @@ async function onRefresh() {
   display: flex;
   height: 100%;
   gap: 0;
+  background: var(--cream);
 }
 
 .transcribe-sidebar {
   width: 260px;
   min-width: 260px;
-  background: #fff;
-  border-right: 1px solid #eaecf0;
+  background: var(--cream);
+  border-right: 1px solid var(--border-light);
   overflow-y: auto;
 }
 
@@ -195,19 +196,20 @@ async function onRefresh() {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  background: var(--cream);
 }
 
 .error-bar {
   padding: 10px 14px;
-  background: #fef3f2;
-  border: 1px solid #fecdca;
-  border-radius: 8px;
-  color: #b42318;
-  font-size: 13px;
+  background: var(--cream);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-std);
+  color: var(--charcoal-83);
+  font-size: 0.875rem;
 }
 
 @media (max-width: 768px) {
   .transcribe-page { flex-direction: column; }
-  .transcribe-sidebar { width: 100%; min-width: 0; max-height: 200px; border-right: none; border-bottom: 1px solid #eaecf0; }
+  .transcribe-sidebar { width: 100%; min-width: 0; max-height: 200px; border-right: none; border-bottom: 1px solid var(--border-light); }
 }
 </style>

@@ -21,11 +21,11 @@ const statusLabels: Record<string, string> = {
 }
 
 const statusColors: Record<string, string> = {
-  uploading: '#f59e0b',
-  transcribing: '#3b82f6',
-  llm_processing: '#8b5cf6',
-  done: '#10b981',
-  failed: '#ef4444',
+  uploading: 'var(--charcoal-82)',
+  transcribing: 'var(--charcoal-82)',
+  llm_processing: 'var(--charcoal-82)',
+  done: 'var(--charcoal-83)',
+  failed: 'var(--charcoal-83)',
 }
 
 function formatTime(iso: string): string {
@@ -96,52 +96,53 @@ async function onDelete(e: Event, taskId: number) {
   align-items: center;
   justify-content: space-between;
   padding: 16px 16px 12px;
-  border-bottom: 1px solid #eaecf0;
+  border-bottom: 1px solid var(--border-light);
 }
 
 .list-header h3 {
   margin: 0;
-  font-size: 15px;
+  font-size: 0.875rem;
   font-weight: 600;
-  color: #1d2939;
+  color: var(--charcoal);
 }
 
 .btn-refresh {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 18px;
-  color: #667085;
+  font-size: 1.125rem;
+  color: var(--muted);
   padding: 4px;
-  border-radius: 4px;
+  border-radius: var(--radius-micro);
+  transition: background 0.15s;
 }
 
 .btn-refresh:hover {
-  background: #f2f4f7;
-  color: #4f46e5;
+  background: var(--charcoal-4);
+  color: var(--charcoal);
 }
 
 .empty {
   padding: 32px 16px;
   text-align: center;
-  color: #98a2b3;
-  font-size: 14px;
+  color: var(--muted);
+  font-size: 0.875rem;
 }
 
 .task-item {
   padding: 12px 16px;
   cursor: pointer;
-  border-bottom: 1px solid #f2f4f7;
+  border-bottom: 1px solid var(--border-light);
   transition: background 0.15s;
 }
 
 .task-item:hover {
-  background: #f9fafb;
+  background: var(--charcoal-4);
 }
 
 .task-item.active {
-  background: #f0f0ff;
-  border-left: 3px solid #4f46e5;
+  background: var(--charcoal-3);
+  border-left: 3px solid var(--charcoal-40);
 }
 
 .task-top {
@@ -152,9 +153,9 @@ async function onDelete(e: Event, taskId: number) {
 }
 
 .task-name {
-  font-size: 13px;
+  font-size: 0.813rem;
   font-weight: 500;
-  color: #344054;
+  color: var(--charcoal);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -165,12 +166,12 @@ async function onDelete(e: Event, taskId: number) {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 12px;
-  color: #d0d5dd;
+  font-size: 0.75rem;
+  color: var(--charcoal-40);
   padding: 2px 4px;
-  border-radius: 3px;
+  border-radius: var(--radius-micro);
   opacity: 0;
-  transition: opacity 0.15s;
+  transition: opacity 0.15s, background 0.15s;
 }
 
 .task-item:hover .btn-del {
@@ -178,8 +179,8 @@ async function onDelete(e: Event, taskId: number) {
 }
 
 .btn-del:hover {
-  color: #ef4444;
-  background: #fef3f2;
+  color: var(--charcoal-83);
+  background: var(--charcoal-4);
 }
 
 .task-bottom {
@@ -189,7 +190,7 @@ async function onDelete(e: Event, taskId: number) {
 }
 
 .task-status {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 500;
   display: flex;
   align-items: center;
@@ -209,7 +210,7 @@ async function onDelete(e: Event, taskId: number) {
 }
 
 .task-time {
-  font-size: 11px;
-  color: #98a2b3;
+  font-size: 0.688rem;
+  color: var(--muted);
 }
 </style>
