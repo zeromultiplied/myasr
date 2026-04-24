@@ -1,7 +1,7 @@
 import logging
 
+import bcrypt
 from fastapi import APIRouter, Depends, HTTPException
-from passlib.context import CryptContext
 from pydantic import BaseModel
 
 from app.db import create_user, get_user_by_id, get_user_by_username, update_user
@@ -10,7 +10,13 @@ from app.middleware.auth import create_access_token, get_current_user
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/auth")
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+
+def verify_password(password: str, hashed: str) -> bool:
+    return bcrypt.checkpw(password.encode(), hashed.encode())
 
 
 class RegisterRequest(BaseModel):
@@ -41,7 +47,7 @@ async def register(req: RegisterRequest):
     if existing:
         raise HTTPException(400, "Username already exists")
 
-    password_hash = pwd_context.hash(req.password)
+    password_hash = hash_password(req.password)
     user_id = create_user(username=req.username, password_hash=password_hash)
     token = create_access_token({"sub": str(user_id)})
     logger.info("User registered: %s (id=%d)", req.username, user_id)
@@ -52,7 +58,7 @@ async def register(req: RegisterRequest):
 async def login(req: LoginRequest):
     """Login and get a JWT token."""
     user = get_user_by_username(req.username)
-    if not user or not pwd_context.verify(req.password, user["password_hash"]):
+    if not user or not verify_password(req.password, user["password_hash"]):
         raise HTTPException(401, "Invalid username or password")
 
     token = create_access_token({"sub": str(user["id"])})
@@ -81,7 +87,7 @@ async def update_me(req: UpdateProfileRequest, user: dict = Depends(get_current_
     if req.password is not None:
         if len(req.password) < 4:
             raise HTTPException(400, "Password must be at least 4 characters")
-        updates["password_hash"] = pwd_context.hash(req.password)
+        updates["password_hash"] = hash_password(req.password)
 
     if updates:
         update_user(user["id"], **updates)
