@@ -86,7 +86,7 @@ def init_db():
     # Knowledge base documents
     conn.execute("""
         CREATE TABLE IF NOT EXISTS kb_documents (
-           极id INTEGER PRIMARY KEY AUTOINCREMENT,
+           id INTEGER PRIMARY KEY AUTOINCREMENT,
             collection_id INTEGER NOT NULL,
             title TEXT NOT NULL,
             content TEXT NOT NULL,
@@ -97,7 +97,7 @@ def init_db():
             is_published BOOLEAN NOT NULL DEFAULT 1,
             version INTEGER NOT NULL DEFAULT 1,
             created_at TEXT NOT NULL DEFAULT (datetime('now')),
-            updated_at TEXT极NOT NULL DEFAULT (datetime('now')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now')),
             FOREIGN KEY (collection_id) REFERENCES kb_collections(id) ON DELETE CASCADE,
             FOREIGN KEY (parent_id) REFERENCES kb_documents(id) ON DELETE SET NULL
         )
@@ -122,6 +122,33 @@ def init_db():
         )
     """)
 
+    # Users table
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL UNIQUE,
+            email TEXT NOT NULL DEFAULT '',
+            password_hash TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+        )
+    """)
+
+    # Saved results table
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS saved_results (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            task_id INTEGER,
+            filename TEXT NOT NULL,
+            transcription TEXT NOT NULL,
+            results TEXT NOT NULL,
+            file_path TEXT,
+            created_at TEXT NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    """)
+
     # Migration for existing tables
     try:
         conn.execute("ALTER TABLE tasks ADD COLUMN asr_raw_result TEXT")
@@ -140,6 +167,11 @@ def init_db():
 
     try:
         conn.execute("ALTER TABLE tasks ADD COLUMN kb_processed BOOLEAN NOT NULL DEFAULT 0")
+    except Exception:
+        pass  # column already exists
+
+    try:
+        conn.execute("ALTER TABLE tasks ADD COLUMN user_id INTEGER")
     except Exception:
         pass  # column already exists
 
@@ -162,13 +194,14 @@ def create_task(
     task_types: list[str],
     llm_provider: str | None = None,
     llm_model: str | None = None,
+    user_id: int | None = None,
 ) -> int:
     now = datetime.now().isoformat()
     conn = _get_conn()
     cursor = conn.execute(
-        """INSERT INTO tasks (filename, status, task_types, llm_provider, llm_model, created_at, updated_at)
-           VALUES (?, 'uploading', ?, ?, ?, ?, ?)""",
-        (filename, json.dumps(task_types), llm_provider, llm_model, now, now),
+        """INSERT INTO tasks (filename, status, task_types, llm_provider, llm_model, user_id, created_at, updated_at)
+           VALUES (?, 'uploading', ?, ?, ?, ?, ?, ?)""",
+        (filename, json.dumps(task_types), llm_provider, llm_model, user_id, now, now),
     )
     task_id = cursor.lastrowid
     conn.commit()
@@ -196,11 +229,17 @@ def get_task(task_id: int) -> dict | None:
     return _row_to_dict(row)
 
 
-def list_tasks(limit: int = 50) -> list[dict]:
+def list_tasks(limit: int = 50, user_id: int | None = None) -> list[dict]:
     conn = _get_conn()
-    rows = conn.execute(
-        "SELECT * FROM tasks ORDER BY created_at DESC LIMIT ?", (limit,)
-    ).fetchall()
+    if user_id is not None:
+        rows = conn.execute(
+            "SELECT * FROM tasks WHERE user_id = ? ORDER BY created_at DESC LIMIT ?",
+            (user_id, limit),
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            "SELECT * FROM tasks ORDER BY created_at DESC LIMIT ?", (limit,)
+        ).fetchall()
     conn.close()
     return [_row_to_dict(r) for r in rows]
 
@@ -213,3 +252,130 @@ def _row_to_dict(row: sqlite3.Row) -> dict:
     if d.get("results"):
         d["results"] = json.loads(d["results"])
     return d
+
+
+# --- User CRUD ---
+
+def create_user(username: str, password_hash: str, email: str = "") -> int:
+    now = datetime.now().isoformat()
+    conn = _get_conn()
+    cursor = conn.execute(
+        "INSERT INTO users (username, email, password_hash, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+        (username, email, password_hash, now, now),
+    )
+    user_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    return user_id
+
+
+def get_user_by_username(username: str) -> dict | None:
+    conn = _get_conn()
+    row = conn.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def get_user_by_id(user_id: int) -> dict | None:
+    conn = _get_conn()
+    row = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def update_user(user_id: int, **kwargs) -> bool:
+    if not kwargs:
+        return False
+    conn = _get_conn()
+    kwargs["updated_at"] = datetime.now().isoformat()
+    sets = ", ".join(f"{k} = ?" for k in kwargs)
+    values = list(kwargs.values())
+    values.append(user_id)
+    cursor = conn.execute(f"UPDATE users SET {sets} WHERE id = ?", values)
+    conn.commit()
+    conn.close()
+    return cursor.rowcount > 0
+
+
+# --- Saved Results CRUD ---
+
+def create_saved_result(
+    user_id: int,
+    filename: str,
+    transcription: str,
+    results: str,
+    task_id: int | None = None,
+    file_path: str | None = None,
+) -> int:
+    now = datetime.now().isoformat()
+    conn = _get_conn()
+    cursor = conn.execute(
+        "INSERT INTO saved_results (user_id, task_id, filename, transcription, results, file_path, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (user_id, task_id, filename, transcription, results, file_path, now),
+    )
+    rid = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    return rid
+
+
+def list_saved_results(
+    user_id: int,
+    search: str | None = None,
+    limit: int = 20,
+    offset: int = 0,
+) -> list[dict]:
+    conn = _get_conn()
+    if search:
+        rows = conn.execute(
+            """SELECT id, user_id, task_id, filename, transcription, file_path, created_at
+               FROM saved_results
+               WHERE user_id = ? AND (filename LIKE ? OR transcription LIKE ?)
+               ORDER BY created_at DESC LIMIT ? OFFSET ?""",
+            (user_id, f"%{search}%", f"%{search}%", limit, offset),
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            """SELECT id, user_id, task_id, filename, transcription, file_path, created_at
+               FROM saved_results
+               WHERE user_id = ?
+               ORDER BY created_at DESC LIMIT ? OFFSET ?""",
+            (user_id, limit, offset),
+        ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def count_saved_results(user_id: int, search: str | None = None) -> int:
+    conn = _get_conn()
+    if search:
+        row = conn.execute(
+            "SELECT COUNT(*) FROM saved_results WHERE user_id = ? AND (filename LIKE ? OR transcription LIKE ?)",
+            (user_id, f"%{search}%", f"%{search}%"),
+        ).fetchone()
+    else:
+        row = conn.execute(
+            "SELECT COUNT(*) FROM saved_results WHERE user_id = ?", (user_id,)
+        ).fetchone()
+    conn.close()
+    return row[0] if row else 0
+
+
+def get_saved_result(result_id: int) -> dict | None:
+    conn = _get_conn()
+    row = conn.execute("SELECT * FROM saved_results WHERE id = ?", (result_id,)).fetchone()
+    conn.close()
+    if row is None:
+        return None
+    d = dict(row)
+    if d.get("results"):
+        d["results"] = json.loads(d["results"])
+    return d
+
+
+def delete_saved_result(result_id: int) -> bool:
+    conn = _get_conn()
+    cursor = conn.execute("DELETE FROM saved_results WHERE id = ?", (result_id,))
+    conn.commit()
+    conn.close()
+    return cursor.rowcount > 0

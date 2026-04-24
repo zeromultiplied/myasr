@@ -5,14 +5,15 @@ import re
 from datetime import datetime
 from pathlib import Path
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel
 from starlette.responses import StreamingResponse
 
 from app.asr.xfyun import XfyunASRProvider
 from app.config import settings
-from app.db import create_task, get_task, list_tasks, update_task
+from app.db import create_task, get_task, list_tasks, update_task, create_saved_result
 from app.llm.factory import get_llm_provider
+from app.middleware.auth import get_current_user
 from app.models import TaskType
 from app.tasks.prompts import TASK_PROMPTS
 
@@ -60,6 +61,7 @@ async def submit_task(
     tasks: str = Form(...),
     llm_provider: str | None = Form(None),
     llm_model: str | None = Form(None),
+    user: dict = Depends(get_current_user),
 ):
     """Submit an audio file for processing. Returns task_id immediately."""
     _validate_audio_format(file.filename)
@@ -76,35 +78,40 @@ async def submit_task(
         task_types=task_list,
         llm_provider=llm_provider,
         llm_model=llm_model,
+        user_id=user["id"],
     )
 
     # Start background processing
     asyncio.create_task(_process_task(task_id, audio_data, file.filename, task_list, llm_provider, llm_model))
 
-    logger.info("Task %d submitted: file=%s tasks=%s", task_id, file.filename, tasks)
+    logger.info("Task %d submitted: file=%s tasks=%s user=%d", task_id, file.filename, tasks, user["id"])
     return {"task_id": task_id, "status": "uploading"}
 
 
 @router.get("/tasks")
-async def get_tasks():
-    """List all tasks."""
-    return list_tasks()
+async def get_tasks(user: dict = Depends(get_current_user)):
+    """List all tasks for the current user."""
+    return list_tasks(user_id=user["id"])
 
 
 @router.get("/tasks/{task_id}")
-async def get_task_detail(task_id: int):
+async def get_task_detail(task_id: int, user: dict = Depends(get_current_user)):
     """Get task detail by id."""
     task = get_task(task_id)
     if not task:
+        raise HTTPException(404, "Task not found")
+    if task.get("user_id") is not None and task["user_id"] != user["id"]:
         raise HTTPException(404, "Task not found")
     return task
 
 
 @router.delete("/tasks/{task_id}")
-async def delete_task(task_id: int):
+async def delete_task(task_id: int, user: dict = Depends(get_current_user)):
     """Delete a task."""
     task = get_task(task_id)
     if not task:
+        raise HTTPException(404, "Task not found")
+    if task.get("user_id") is not None and task["user_id"] != user["id"]:
         raise HTTPException(404, "Task not found")
     from app.db import _get_conn
     conn = _get_conn()
@@ -115,10 +122,12 @@ async def delete_task(task_id: int):
 
 
 @router.post("/tasks/{task_id}/retry")
-async def retry_task(task_id: int):
+async def retry_task(task_id: int, user: dict = Depends(get_current_user)):
     """Retry a failed task that has an order_id — re-query iFlytek and recover."""
     task = get_task(task_id)
     if not task:
+        raise HTTPException(404, "Task not found")
+    if task.get("user_id") is not None and task["user_id"] != user["id"]:
         raise HTTPException(404, "Task not found")
     if task["status"] != "failed":
         raise HTTPException(400, "Only failed tasks can be retried")
@@ -144,10 +153,12 @@ class ReanalyzeRequest(BaseModel):
 
 
 @router.post("/tasks/{task_id}/reanalyze")
-async def reanalyze_task(task_id: int, req: ReanalyzeRequest):
+async def reanalyze_task(task_id: int, req: ReanalyzeRequest, user: dict = Depends(get_current_user)):
     """Re-run LLM analysis on an already-transcribed task."""
     task = get_task(task_id)
     if not task:
+        raise HTTPException(404, "Task not found")
+    if task.get("user_id") is not None and task["user_id"] != user["id"]:
         raise HTTPException(404, "Task not found")
     if not task.get("transcription"):
         raise HTTPException(400, "Task has no transcription to analyze")
@@ -166,20 +177,32 @@ async def reanalyze_task(task_id: int, req: ReanalyzeRequest):
 
 
 @router.get("/stats")
-async def get_stats():
-    """Return task statistics for the homepage."""
+async def get_stats(user: dict = Depends(get_current_user)):
+    """Return task statistics for the current user."""
     from app.db import _get_conn
     conn = _get_conn()
+    uid = user["id"]
     row = conn.execute("""
         SELECT
             COUNT(*) as total,
             SUM(CASE WHEN status = 'done' THEN 1 ELSE 0 END) as done,
             SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed,
             SUM(CASE WHEN status NOT IN ('done', 'failed') THEN 1 ELSE 0 END) as processing
-        FROM tasks
-    """).fetchone()
+        FROM tasks WHERE user_id = ?
+    """, (uid,)).fetchone()
+    # This month count
+    month_start = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat()
+    month_row = conn.execute(
+        "SELECT COUNT(*) FROM tasks WHERE user_id = ? AND created_at >= ?",
+        (uid, month_start),
+    ).fetchone()
+    # Materials count
+    materials_row = conn.execute(
+        "SELECT COUNT(*) FROM saved_results WHERE user_id = ?", (uid,)
+    ).fetchone()
     recent = conn.execute(
-        "SELECT id, filename, status, created_at, updated_at FROM tasks ORDER BY updated_at DESC LIMIT 10"
+        "SELECT id, filename, status, created_at, updated_at FROM tasks WHERE user_id = ? ORDER BY updated_at DESC LIMIT 10",
+        (uid,),
     ).fetchall()
     conn.close()
     return {
@@ -187,6 +210,8 @@ async def get_stats():
         "done": row[1],
         "failed": row[2],
         "processing": row[3],
+        "this_month": month_row[0] if month_row else 0,
+        "materials_count": materials_row[0] if materials_row else 0,
         "recent": [dict(r) for r in recent],
     }
 
@@ -381,7 +406,7 @@ class SaveRequest(BaseModel):
 
 
 @router.post("/save")
-async def save_result(req: SaveRequest):
+async def save_result(req: SaveRequest, user: dict = Depends(get_current_user)):
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     stem = re.sub(r'[^\w\u4e00-\u9fff.-]', '_', req.filename.rsplit('.', 1)[0])
@@ -406,6 +431,15 @@ async def save_result(req: SaveRequest):
         title = TASK_NAMES.get(r.task, r.task)
         md += f"## {title}\n\n{r.result}\n\n"
     md_path.write_text(md, encoding="utf-8")
+
+    # Also persist to saved_results table
+    create_saved_result(
+        user_id=user["id"],
+        filename=req.filename,
+        transcription=req.transcription,
+        results=json.dumps([r.model_dump() for r in req.results], ensure_ascii=False),
+        file_path=str(md_path),
+    )
 
     logger.info("Results saved to %s", OUTPUT_DIR / base_name)
     return {"path": str(md_path), "json_path": str(json_path)}

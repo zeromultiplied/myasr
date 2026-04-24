@@ -7,6 +7,8 @@ from fastapi import FastAPI
 from app.config import settings
 from app.routes.health import router as health_router
 from app.routes.process import router as process_router
+from app.routes.auth import router as auth_router
+from app.routes.materials import router as materials_router
 
 # 根据环境选择数据库初始化
 if os.environ.get('VERCEL') or os.environ.get('POSTGRES_URL'):
@@ -27,6 +29,8 @@ app = FastAPI(title="MyASR", description="语音转文字 + LLM文本处理 API"
 
 app.include_router(health_router)
 app.include_router(process_router)
+app.include_router(auth_router)
+app.include_router(materials_router)
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

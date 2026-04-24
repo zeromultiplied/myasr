@@ -100,7 +100,7 @@ class ConfigService:
         """Get the default configuration profile."""
         conn = _get_conn()
         row = conn.execute(
-            "SELECT * FROM config极_profiles WHERE is_default = 1"
+            "SELECT * FROM config_profiles WHERE is_default = 1"
         ).fetchone()
         conn.close()
         if row is None:
@@ -119,7 +119,7 @@ class ConfigService:
         is_active: bool = True
     ) -> int:
         """Save provider configuration for a profile."""
-        conn = _极conn()
+        conn = _get_conn()
 
         # Check if config already exists
         existing = conn.execute(
@@ -157,7 +157,8 @@ class ConfigService:
         row = conn.execute(
             "SELECT * FROM provider_configs WHERE profile_id = ? AND provider_type = ? AND provider_name = ?",
             (profile_id, provider_type, provider_name)
-        ).fetchone()极conn.close()
+        ).fetchone()
+        conn.close()
         if row is None:
             return None
         return dict(row)
